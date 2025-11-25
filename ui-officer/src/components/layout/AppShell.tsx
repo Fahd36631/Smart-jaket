@@ -12,6 +12,8 @@ import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../providers/AuthProvider";
 
+const LOGO_URL = `${import.meta.env.BASE_URL}logoDfa3.png`;
+
 const navItems = [
   { to: "/dashboard", label: "لوحة التحكم", icon: HomeModernIcon },
   { to: "/personnel", label: "الأفراد", icon: UserGroupIcon },
@@ -61,7 +63,7 @@ const AppShell = () => {
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
-            <img src="/logoDfa3.png" alt="Logo" className="h-10 w-10 lg:hidden" />
+            <img src={LOGO_URL} alt="Logo" className="h-10 w-10 lg:hidden" />
             <div>
               <p className="text-sm text-gray-500">مرحباً بك</p>
               <p className="text-lg font-semibold text-brand-dark">
@@ -121,7 +123,7 @@ const AppShell = () => {
 const SidebarHeader = () => (
   <div className="flex items-center gap-3">
     <img
-      src="/logoDfa3.png"
+      src={LOGO_URL}
       alt="Civil Defense Logo"
       className="h-14 w-14 rounded-full border border-brand-light bg-surface-muted object-contain p-1"
     />

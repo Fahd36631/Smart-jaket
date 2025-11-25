@@ -10,6 +10,8 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
 
+  const logoUrl = `${import.meta.env.BASE_URL}logoDfa3.png`;
+
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     try {
@@ -25,7 +27,7 @@ const LoginPage = () => {
     <div className="page-enter flex min-h-screen bg-surface-muted">
       <div className="relative hidden flex-1 items-center justify-center bg-brand-dark/90 p-12 text-white lg:flex">
         <img
-          src="/logoDfa3.png"
+          src={logoUrl}
           alt="شعار الدفاع المدني"
           className="mb-8 h-24 w-24 rounded-full bg-white/90 p-2"
         />
@@ -48,7 +50,7 @@ const LoginPage = () => {
         <div className="mb-10">
           <div className="mb-6 flex flex-col items-center justify-center lg:hidden">
             <img
-              src="/logoDfa3.png"
+              src={logoUrl}
               alt="شعار الدفاع المدني"
               className="mb-4 h-20 w-20 rounded-full bg-white p-2 shadow-md"
             />
