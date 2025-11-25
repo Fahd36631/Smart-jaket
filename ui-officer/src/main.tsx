@@ -10,7 +10,7 @@ const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/Smart-jaket">
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <App />
