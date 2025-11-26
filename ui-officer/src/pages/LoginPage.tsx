@@ -2,6 +2,7 @@ import type { FormEvent } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../providers/AuthProvider";
+import LogoMark from "../components/common/LogoMark";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -9,8 +10,6 @@ const LoginPage = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-
-  const logoUrl = `${import.meta.env.BASE_URL}logoDfa3.png`;
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
@@ -26,14 +25,10 @@ const LoginPage = () => {
   return (
     <div className="page-enter flex min-h-screen bg-surface-muted">
       <div className="relative hidden flex-1 items-center justify-center bg-brand-dark/90 p-12 text-white lg:flex">
-        <img
-          src={logoUrl}
-          alt="شعار الدفاع المدني"
-          className="mb-8 h-24 w-24 rounded-full bg-white/90 p-2"
-        />
+        <LogoMark size="lg" className="mb-8 bg-white/90 text-brand-dark" />
         <div>
           <p className="text-sm uppercase tracking-[0.3em] text-white/80">
-            الدفاع المدني
+            SmartVest Ops
           </p>
           <h1 className="mt-4 text-4xl font-bold leading-snug">
             منصة متابعة السترات الذكية
@@ -49,13 +44,9 @@ const LoginPage = () => {
       <div className="flex w-full max-w-xl flex-col justify-center bg-white px-8 py-12 shadow-2xl lg:px-16">
         <div className="mb-10">
           <div className="mb-6 flex flex-col items-center justify-center lg:hidden">
-            <img
-              src={logoUrl}
-              alt="شعار الدفاع المدني"
-              className="mb-4 h-20 w-20 rounded-full bg-white p-2 shadow-md"
-            />
+            <LogoMark size="lg" className="mb-4 bg-white text-brand-dark shadow-md" />
             <p className="text-xs uppercase tracking-wider text-gray-400">
-              الدفاع المدني
+              SmartVest Ops
             </p>
             <h1 className="mt-2 text-center text-xl font-bold text-brand-dark">
               منصة متابعة السترات الذكية
@@ -109,7 +100,7 @@ const LoginPage = () => {
           </button>
         </form>
         <p className="mt-8 text-center text-sm text-gray-500">
-          جميع الحقوق محفوظة © المديرية العامة للدفاع المدني 2025
+          جميع الحقوق محفوظة © SmartVest Ops 2025
         </p>
       </div>
     </div>

@@ -11,8 +11,7 @@ import clsx from "clsx";
 import { useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../../providers/AuthProvider";
-
-const LOGO_URL = `${import.meta.env.BASE_URL}logoDfa3.png`;
+import LogoMark from "../common/LogoMark";
 
 const navItems = [
   { to: "/dashboard", label: "لوحة التحكم", icon: HomeModernIcon },
@@ -63,7 +62,7 @@ const AppShell = () => {
             >
               <Bars3Icon className="h-6 w-6" />
             </button>
-            <img src={LOGO_URL} alt="Logo" className="h-10 w-10 lg:hidden" />
+            <LogoMark size="sm" className="lg:hidden" />
             <div>
               <p className="text-sm text-gray-500">مرحباً بك</p>
               <p className="text-lg font-semibold text-brand-dark">
@@ -122,14 +121,10 @@ const AppShell = () => {
 
 const SidebarHeader = () => (
   <div className="flex items-center gap-3">
-    <img
-      src={LOGO_URL}
-      alt="Civil Defense Logo"
-      className="h-14 w-14 rounded-full border border-brand-light bg-surface-muted object-contain p-1"
-    />
+    <LogoMark className="border border-brand-light bg-surface-muted p-1" />
     <div>
-      <p className="text-sm text-gray-500">المديرية العامة للدفاع المدني</p>
-      <p className="text-lg font-semibold text-brand-dark">لوحة الضابط</p>
+      <p className="text-sm text-gray-500">منصة السترة الذكية</p>
+      <p className="text-lg font-semibold text-brand-dark">مركز الضابط</p>
     </div>
   </div>
 );
