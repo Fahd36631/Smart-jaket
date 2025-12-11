@@ -20,9 +20,9 @@ const convertPersonnelDataToRecord = (
     lastReadingAt: createdAt,
     phone: personnelData.phone,
     location: {
-      lat: 24.774265, // يمكن إضافتها لاحقاً من GPS
-      lng: 46.738586,
-      city: 'الرياض',
+      lat: 0, // غير متوفر - سيتم إضافتها من GPS عند توفرها
+      lng: 0,
+      city: undefined,
     },
     sensors: {
       temperature: {

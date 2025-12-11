@@ -13,7 +13,7 @@ export type GasReading = SensorReading & { value: number };
 export type LocationPoint = {
   lat: number;
   lng: number;
-  city?: string;
+  city?: string | undefined;
 };
 
 export type PersonnelRecord = {

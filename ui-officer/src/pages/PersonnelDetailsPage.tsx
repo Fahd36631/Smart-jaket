@@ -141,9 +141,6 @@ const PersonnelDetailsPage = () => {
             <span className="text-gray-400">آخر تحديث:</span>{" "}
             {formatDateTime(person.lastReadingAt)}
           </p>
-          <p>
-            <span className="text-gray-400">الموقع:</span> {person.location.city}
-          </p>
         </div>
       </div>
 
@@ -161,11 +158,21 @@ const PersonnelDetailsPage = () => {
       <div className="rounded-3xl bg-white p-6 shadow-soft">
         <p className="text-sm text-gray-500">الموقع الحالي</p>
         <h3 className="text-xl font-bold text-gray-900">
-          {person.location.city} - محدث كل 15 ثانية
+          الموقع غير متوفر حالياً
         </h3>
-        <div className="mt-4 h-72 rounded-2xl bg-[url('https://tile.openstreetmap.org/8/141/96.png')] bg-cover bg-center" />
+        <div className="mt-4 flex h-72 items-center justify-center rounded-2xl bg-gray-100">
+          <div className="text-center">
+            <svg className="mx-auto h-16 w-16 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            <p className="mt-4 text-sm text-gray-500">
+              بيانات الموقع ستظهر هنا عند توفرها من ESP32
+            </p>
+          </div>
+        </div>
         <p className="mt-3 text-sm text-gray-500">
-          في حال انقطاع الإشارة سيتم إشعارك فوراً لإعادة المحاولة.
+          سيتم دمج واجهة الخرائط الحقيقية عند توفر بيانات الموقع من الأجهزة.
         </p>
       </div>
     </div>
