@@ -1,20 +1,65 @@
+import { useEffect } from "react";
 import { Pie, PieChart, ResponsiveContainer, Cell } from "recharts";
 import AlertList from "../components/dashboard/AlertList";
 import MetricCard from "../components/ui/MetricCard";
 import StatusBadge from "../components/ui/StatusBadge";
-import { personnelMock } from "../data/mock";
+import { useSensorReadings } from "../hooks/useSensorReadings";
+import { usePersonnel } from "../hooks/usePersonnel";
+import { mapReadingsToPersonnel } from "../lib/firebaseUtils";
 
 const DashboardPage = () => {
-  const total = personnelMock.length;
-  const safe = personnelMock.filter((p) => p.status === "normal").length;
-  const warning = personnelMock.filter((p) => p.status === "warning").length;
-  const danger = personnelMock.filter((p) => p.status === "danger").length;
+  const { readings, loading: readingsLoading, error: readingsError } = useSensorReadings(undefined, 100);
+  const { personnel: personnelList, loading: personnelLoading } = usePersonnel();
+  const personnel = mapReadingsToPersonnel(readings, personnelList);
+  
+  const loading = readingsLoading || personnelLoading;
+  const error = readingsError;
+
+  const total = personnel.length;
+  const safe = personnel.filter((p) => p.status === "normal").length;
+  const warning = personnel.filter((p) => p.status === "warning").length;
+  const danger = personnel.filter((p) => p.status === "danger").length;
 
   const chartData = [
     { name: "طبيعي", value: safe, color: "#009b6d" },
     { name: "تنبيه", value: warning, color: "#f2b90c" },
     { name: "خطر", value: danger, color: "#d82727" },
   ];
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-light border-t-brand-dark" />
+          <span className="text-gray-600">جاري تحميل البيانات...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="rounded-3xl bg-white p-6 shadow-soft text-center">
+          <p className="text-lg font-semibold text-red-600">خطأ في تحميل البيانات</p>
+          <p className="mt-2 text-sm text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (personnel.length === 0) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="rounded-3xl bg-white p-6 shadow-soft text-center">
+          <p className="text-lg font-semibold text-gray-700">لا توجد بيانات متاحة</p>
+          <p className="mt-2 text-sm text-gray-500">
+            تأكد من إرسال البيانات من ESP32 إلى Backend API
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -54,10 +99,17 @@ const DashboardPage = () => {
                 الحالات الحالية في الميدان
               </h3>
             </div>
-            <span className="text-sm text-gray-400">آخر تحديث منذ 3 دقائق</span>
+            <span className="text-sm text-gray-400">
+              {readings.length > 0
+                ? `آخر تحديث: ${new Intl.DateTimeFormat("ar-SA", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  }).format(new Date(readings[0].created_at instanceof Date ? readings[0].created_at : new Date()))}`
+                : "لا توجد تحديثات"}
+            </span>
           </div>
           <div className="mt-6 space-y-4 lg:hidden">
-            {personnelMock.map((person) => (
+            {personnel.map((person) => (
               <div
                 key={person.id}
                 className="rounded-2xl border border-surface-card bg-surface-muted/60 p-4"
@@ -92,7 +144,7 @@ const DashboardPage = () => {
                 </tr>
               </thead>
               <tbody className="text-sm text-gray-700">
-                {personnelMock.map((person) => (
+                {personnel.map((person) => (
                   <tr key={person.id} className="border-t">
                     <td className="py-3 font-semibold text-gray-900">
                       {person.name}

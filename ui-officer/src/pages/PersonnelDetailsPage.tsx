@@ -1,43 +1,112 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
+import { Timestamp } from "firebase/firestore";
 import SensorCard from "../components/ui/SensorCard";
 import StatusBadge from "../components/ui/StatusBadge";
-import { personnelMock } from "../data/mock";
+import { usePersonnel } from "../hooks/usePersonnel";
+import { useSensorReadings } from "../hooks/useSensorReadings";
+import { mapReadingsToPersonnel } from "../lib/firebaseUtils";
 import { formatDateTime } from "../lib/utils";
+import type { PersonnelRecord } from "../types/personnel";
+import type { SensorReadingData } from "../hooks/useSensorReadings";
 
 const PersonnelDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const person = personnelMock.find((p) => p.id === id);
+  
+  // دالة مساعدة لتحويل Timestamp (يجب تعريفها قبل الاستخدام)
+  const timestampToISO = (ts: any): string => {
+    if (ts instanceof Date) return ts.toISOString();
+    if (typeof ts === 'string') return ts;
+    if (ts && typeof ts === 'object' && 'toDate' in ts) {
+      return ts.toDate().toISOString();
+    }
+    return new Date().toISOString();
+  };
 
-  const heartHistory = useMemo(
-    () =>
-      Array.from({ length: 8 }).map((_, index) => ({
+  // جلب البيانات الحقيقية من Firebase
+  const { personnel: personnelList, loading: personnelLoading } = usePersonnel();
+  const { readings, loading: readingsLoading } = useSensorReadings(undefined, 100);
+  
+  // تحويل البيانات إلى PersonnelRecords
+  const allPersonnel = mapReadingsToPersonnel(readings, personnelList);
+  
+  // البحث عن الفرد المطلوب
+  const person = allPersonnel.find((p) => p.id === id);
+  
+  const loading = personnelLoading || readingsLoading;
+
+  // جلب تاريخ القراءات للفرد المحدد
+  const personReadings = useMemo(() => {
+    if (!person) return [];
+    // البحث عن device_id للفرد
+    const personnelInfo = personnelList.find((p) => 
+      (p.personnel_id || p.id) === id
+    );
+    if (!personnelInfo) return [];
+    
+    return readings
+      .filter((r) => r.device_id === personnelInfo.device_id)
+      .slice(-20) // آخر 20 قراءة
+      .reverse(); // من الأحدث للأقدم
+  }, [person, readings, personnelList, id]);
+
+  const heartHistory = useMemo(() => {
+    if (personReadings.length === 0) {
+      // إذا لم توجد قراءات، نستخدم بيانات افتراضية
+      return Array.from({ length: 8 }).map((_, index) => ({
         time: `${10 - index}:0${(index * 3) % 6} صباحاً`,
-        value:
-          (person?.sensors.heartRate.value ?? 110) +
-          Math.round(Math.sin(index) * 6),
-      })),
-    [person]
-  );
+        value: (person?.sensors.heartRate.value ?? 110) + Math.round(Math.sin(index) * 6),
+      }));
+    }
+    // استخدام القراءات الحقيقية
+    return personReadings.slice(0, 20).map((reading, index) => {
+      const date = new Date(timestampToISO(reading.created_at));
+      return {
+        time: `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`,
+        value: reading.pulse_raw,
+      };
+    });
+  }, [personReadings, person]);
 
-  const tempHistory = useMemo(
-    () =>
-      Array.from({ length: 8 }).map((_, index) => ({
+  const tempHistory = useMemo(() => {
+    if (personReadings.length === 0) {
+      // إذا لم توجد قراءات، نستخدم بيانات افتراضية
+      return Array.from({ length: 8 }).map((_, index) => ({
         time: `${10 - index}:0${(index * 2) % 6} صباحاً`,
-        value:
-          (person?.sensors.temperature.value ?? 37.2) +
-          Math.round(Math.sin(index) * 2) / 2,
-      })),
-    [person]
-  );
+        value: (person?.sensors.temperature.value ?? 37.2) + Math.round(Math.sin(index) * 2) / 2,
+      }));
+    }
+    // استخدام القراءات الحقيقية
+    return personReadings.slice(0, 20).map((reading) => {
+      const date = new Date(timestampToISO(reading.created_at));
+      return {
+        time: `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`,
+        value: reading.temp_object,
+      };
+    });
+  }, [personReadings, person]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-light border-t-brand-dark" />
+          <span className="text-gray-600">جاري تحميل البيانات...</span>
+        </div>
+      </div>
+    );
+  }
 
   if (!person) {
     return (
       <div className="rounded-3xl bg-white p-12 text-center shadow-soft">
         <p className="text-lg font-semibold text-gray-700">
           تعذر العثور على بيانات الفرد.
+        </p>
+        <p className="mt-2 text-sm text-gray-500">
+          تأكد من أن الفرد مضاف وأن البيانات تُرسل من السترة.
         </p>
         <button
           onClick={() => navigate("/personnel")}
@@ -117,17 +186,22 @@ const HistoryChart = ({
 }) => (
   <div className="rounded-3xl bg-white p-6 shadow-soft">
     <p className="text-sm text-gray-500">{title}</p>
-    <div className="mt-4 h-64">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data}>
-          <XAxis dataKey="time" tick={{ fontSize: 12 }} />
+    <div className="mt-4 h-64 w-full" style={{ minHeight: '256px', minWidth: '0' }}>
+      <ResponsiveContainer width="100%" height="100%" minHeight={256} minWidth={0}>
+        <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <XAxis 
+            dataKey="time" 
+            tick={{ fontSize: 12 }} 
+            interval="preserveStartEnd"
+          />
           <Tooltip />
           <Line
             type="monotone"
             dataKey="value"
             stroke={color}
             strokeWidth={3}
-            dot={false}
+            dot={{ r: 4 }}
+            activeDot={{ r: 6 }}
           />
         </LineChart>
       </ResponsiveContainer>

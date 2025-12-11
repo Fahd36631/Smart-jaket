@@ -25,3 +25,5 @@ const LogoMark = ({ size = "md", className }: LogoMarkProps) => (
 
 export default LogoMark;
 
+
+

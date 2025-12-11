@@ -6,6 +6,7 @@ import {
   MapIcon,
   UserGroupIcon,
   XMarkIcon,
+  Cog6ToothIcon,
 } from "@heroicons/react/24/outline";
 import clsx from "clsx";
 import { useState } from "react";
@@ -17,6 +18,7 @@ const navItems = [
   { to: "/dashboard", label: "لوحة التحكم", icon: HomeModernIcon },
   { to: "/personnel", label: "الأفراد", icon: UserGroupIcon },
   { to: "/map", label: "الخريطة", icon: MapIcon },
+  { to: "/settings", label: "إعدادات الأجهزة", icon: Cog6ToothIcon },
 ];
 
 const AppShell = () => {

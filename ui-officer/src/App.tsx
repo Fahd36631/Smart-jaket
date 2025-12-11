@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import PersonnelListPage from "./pages/PersonnelListPage";
 import PersonnelDetailsPage from "./pages/PersonnelDetailsPage";
 import MapViewPage from "./pages/MapViewPage";
+import DeviceSettingsPage from "./pages/DeviceSettingsPage";
 import AppShell from "./components/layout/AppShell";
 import { useAuth } from "./providers/AuthProvider";
 
@@ -46,6 +47,7 @@ const App = () => {
         <Route path="personnel" element={<PersonnelListPage />} />
         <Route path="personnel/:id" element={<PersonnelDetailsPage />} />
         <Route path="map" element={<MapViewPage />} />
+        <Route path="settings" element={<DeviceSettingsPage />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

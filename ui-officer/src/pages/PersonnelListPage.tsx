@@ -1,7 +1,9 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import StatusBadge from "../components/ui/StatusBadge";
-import { personnelMock } from "../data/mock";
+import { useSensorReadings } from "../hooks/useSensorReadings";
+import { usePersonnel, addPersonnel } from "../hooks/usePersonnel";
+import { mapReadingsToPersonnel } from "../lib/firebaseUtils";
 import type { PersonnelRecord, SensorState } from "../types/personnel";
 
 const PersonnelListPage = () => {
@@ -11,8 +13,15 @@ const PersonnelListPage = () => {
   const [showForm, setShowForm] = useState(false);
   const navigate = useNavigate();
 
+  const { readings, loading: readingsLoading, error: readingsError } = useSensorReadings(undefined, 100);
+  const { personnel: personnelList, loading: personnelLoading } = usePersonnel();
+  const personnel = mapReadingsToPersonnel(readings, personnelList);
+  
+  const loading = readingsLoading || personnelLoading;
+  const error = readingsError;
+
   const filteredPersonnel = useMemo(() => {
-    return personnelMock.filter((person) => {
+    return personnel.filter((person) => {
       const matchesSearch =
         person.name.includes(search) || person.id.includes(search);
       const matchesStatus =
@@ -21,7 +30,31 @@ const PersonnelListPage = () => {
         unitFilter === "all" ? true : person.unit === unitFilter;
       return matchesSearch && matchesStatus && matchesUnit;
     });
-  }, [search, statusFilter, unitFilter]);
+  }, [personnel, search, statusFilter, unitFilter]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-brand-light border-t-brand-dark" />
+          <span className="text-gray-600">جاري تحميل البيانات...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-[400px] items-center justify-center">
+        <div className="rounded-3xl bg-white p-6 shadow-soft text-center">
+          <p className="text-lg font-semibold text-red-600">خطأ في تحميل البيانات</p>
+          <p className="mt-2 text-sm text-gray-600">{error.message}</p>
+        </div>
+      </div>
+    );
+  }
+
+  const uniqueUnits = [...new Set(personnel.map((p) => p.unit))];
 
   return (
     <div className="space-y-6">
@@ -66,7 +99,7 @@ const PersonnelListPage = () => {
           className="rounded-2xl border border-gray-200 bg-white px-4 py-3 text-sm focus:border-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-light/40"
         >
           <option value="all">كل الوحدات</option>
-          {[...new Set(personnelMock.map((p) => p.unit))].map((unit) => (
+          {uniqueUnits.map((unit) => (
             <option key={unit} value={unit}>
               {unit}
             </option>
@@ -149,24 +182,59 @@ const PersonnelListPage = () => {
 const AddPersonnelForm = ({ onClose }: { onClose: () => void }) => {
   const [form, setForm] = useState({
     name: "",
-    id: "",
+    personnel_id: "",
     rank: "",
     unit: "",
     phone: "",
+    device_id: "",
   });
   const [message, setMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (field: keyof typeof form, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
+    setError(null);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setMessage("تم حفظ بيانات الفرد وإرسالها لـ API (محاكاة)");
-    setTimeout(() => {
-      setMessage(null);
-      onClose();
-    }, 1500);
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+
+    try {
+      if (!form.name || !form.rank || !form.unit || !form.device_id) {
+        throw new Error("يرجى ملء جميع الحقول المطلوبة");
+      }
+
+      await addPersonnel({
+        name: form.name,
+        rank: form.rank,
+        unit: form.unit,
+        phone: form.phone || undefined,
+        device_id: form.device_id,
+        personnel_id: form.personnel_id || undefined,
+      });
+
+      setMessage("✅ تم إضافة الفرد بنجاح!");
+      setTimeout(() => {
+        setMessage(null);
+        onClose();
+        setForm({
+          name: "",
+          personnel_id: "",
+          rank: "",
+          unit: "",
+          phone: "",
+          device_id: "",
+        });
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "حدث خطأ أثناء إضافة الفرد");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -181,13 +249,19 @@ const AddPersonnelForm = ({ onClose }: { onClose: () => void }) => {
             <input
               required={field.required}
               type={field.type ?? "text"}
-              value={form[field.name as keyof typeof form]}
-              onChange={(e) => handleChange(field.name as keyof typeof form, e.target.value)}
+              value={form[field.name]}
+              onChange={(e) => handleChange(field.name, e.target.value)}
+              placeholder={field.placeholder}
               className="mt-2 w-full rounded-2xl border border-gray-200 bg-surface-muted px-4 py-3 text-sm focus:border-brand-dark focus:outline-none focus:ring-2 focus:ring-brand-light/40"
             />
           </label>
         ))}
       </div>
+      {error && (
+        <p className="mt-4 rounded-2xl bg-status-danger/10 px-4 py-3 text-sm text-status-danger">
+          {error}
+        </p>
+      )}
       {message && (
         <p className="mt-4 rounded-2xl bg-status-safe/10 px-4 py-3 text-sm text-status-safe">
           {message}
@@ -203,26 +277,31 @@ const AddPersonnelForm = ({ onClose }: { onClose: () => void }) => {
         </button>
         <button
           type="submit"
-          className="rounded-2xl bg-brand-dark px-5 py-2 text-sm font-semibold text-white"
+          disabled={loading}
+          className="rounded-2xl bg-brand-dark px-5 py-2 text-sm font-semibold text-white disabled:opacity-60"
         >
-          حفظ وإرسال
+          {loading ? "جاري الحفظ..." : "حفظ وإرسال"}
         </button>
       </div>
     </form>
   );
 };
 
-const formFields: Array<{
-  name: keyof PersonnelRecord | "phone";
+type FormField = {
+  name: "name" | "personnel_id" | "rank" | "unit" | "phone" | "device_id";
   label: string;
   required?: boolean;
   type?: string;
-}> = [
-  { name: "name", label: "الاسم الكامل", required: true },
-  { name: "id", label: "الرقم العسكري", required: true },
-  { name: "rank", label: "الرتبة", required: true },
-  { name: "unit", label: "الوحدة / الفرع", required: true },
-  { name: "phone", label: "رقم الجوال", type: "tel" },
+  placeholder?: string;
+};
+
+const formFields: FormField[] = [
+  { name: "name", label: "الاسم الكامل", required: true, placeholder: "مثال: خالد العتيبي" },
+  { name: "personnel_id", label: "الرقم العسكري", required: false, placeholder: "مثال: P-2031 (اختياري)" },
+  { name: "rank", label: "الرتبة", required: true, placeholder: "مثال: رقيب" },
+  { name: "unit", label: "الوحدة / الفرع", required: true, placeholder: "مثال: مركز شمال الرياض" },
+  { name: "device_id", label: "معرف الجهاز (Device ID)", required: true, placeholder: "مثال: ESP32-001" },
+  { name: "phone", label: "رقم الجوال", type: "tel", placeholder: "مثال: 0551234567" },
 ];
 
 export default PersonnelListPage;
