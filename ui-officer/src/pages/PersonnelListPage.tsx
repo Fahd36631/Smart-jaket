@@ -4,7 +4,7 @@ import StatusBadge from "../components/ui/StatusBadge";
 import { useSensorReadings } from "../hooks/useSensorReadings";
 import { usePersonnel, addPersonnel } from "../hooks/usePersonnel";
 import { mapReadingsToPersonnel } from "../lib/firebaseUtils";
-import type { PersonnelRecord, SensorState } from "../types/personnel";
+import type { SensorState } from "../types/personnel";
 
 const PersonnelListPage = () => {
   const [search, setSearch] = useState("");

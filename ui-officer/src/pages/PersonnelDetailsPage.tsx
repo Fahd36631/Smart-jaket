@@ -1,15 +1,12 @@
 import { useMemo } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts";
-import { Timestamp } from "firebase/firestore";
 import SensorCard from "../components/ui/SensorCard";
 import StatusBadge from "../components/ui/StatusBadge";
 import { usePersonnel } from "../hooks/usePersonnel";
 import { useSensorReadings } from "../hooks/useSensorReadings";
 import { mapReadingsToPersonnel } from "../lib/firebaseUtils";
 import { formatDateTime } from "../lib/utils";
-import type { PersonnelRecord } from "../types/personnel";
-import type { SensorReadingData } from "../hooks/useSensorReadings";
 
 const PersonnelDetailsPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -61,7 +58,7 @@ const PersonnelDetailsPage = () => {
       }));
     }
     // استخدام القراءات الحقيقية
-    return personReadings.slice(0, 20).map((reading, index) => {
+    return personReadings.slice(0, 20).map((reading) => {
       const date = new Date(timestampToISO(reading.created_at));
       return {
         time: `${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`,

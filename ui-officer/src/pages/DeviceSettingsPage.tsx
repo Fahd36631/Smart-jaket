@@ -22,7 +22,7 @@ const DeviceSettingsPage = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Backend URL - يمكن جلبها من .env
-  const backendURL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
+  const backendURL = import.meta.env.VITE_BACKEND_URL || "https://smart-jacket-backend.onrender.com";
 
   useEffect(() => {
     if (selectedDevice) {

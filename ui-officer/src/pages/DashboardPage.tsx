@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { Pie, PieChart, ResponsiveContainer, Cell } from "recharts";
 import AlertList from "../components/dashboard/AlertList";
 import MetricCard from "../components/ui/MetricCard";
